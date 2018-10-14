@@ -1,7 +1,7 @@
 package br.com.estrutura.dados.arvore;
 
-
 public class Arvore {
+
 	public No raiz;
 	public static No nil = new No(0, false);
 	public Integer cont;
@@ -220,7 +220,7 @@ public class Arvore {
 	void print(No n, String pos) {
 		if (n != null) {
 			String v = (n.v == 0) ? "nil" : n.v + "";
-			System.out.println(v + " - Nó "+ pos + " [" + color(n.cor) + "] -->");
+			System.out.println(v + " - Nó " + pos + " [" + color(n.cor) + "] -->");
 			print(n.esq, "Esquerdo");
 			print(n.dir, "Direito");
 		}
@@ -231,4 +231,3 @@ public class Arvore {
 	}
 
 }
-
