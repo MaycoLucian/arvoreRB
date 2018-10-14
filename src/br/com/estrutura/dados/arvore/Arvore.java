@@ -2,8 +2,8 @@ package br.com.estrutura.dados.arvore;
 
 public class Arvore {
 
-	public Nodo raiz; 
-	public static Nodo nil = new Nodo(0, false); 
+	public No raiz;
+	public static No nil = new No(0, false);
 	public Integer cont;
 
 	public Arvore() {
@@ -11,244 +11,223 @@ public class Arvore {
 	}
 
 	public Arvore(int v) {
-		this.raiz = new Nodo(v, false);
+		this.raiz = new No(v, false);
 	}
-	
 
-	 // As rotações (rotacao_esq e rotacao_dir) servem para manter o balanceamento da árvore,
-	// especialmente porque a árvore preta e vermelha tem como característica o balanceamento
-		private void rotacao_esq(Nodo x) {
-			Nodo y = x.dir;
-			x.dir = y.esq;
-			if (y.esq != Arvore.nil) y.esq.p = x;
-			y.p = x.p;
-			if (x.p == Arvore.nil) this.raiz = y;
-			else if (x == x.p.esq) x.p.esq = y;
-			else x.p.dir = y;
-			y.esq = x;
-			x.p = y;
-		}
-	// Ambas as rotações são idênticas, sendo trocados apenas os "dir" e "esq", referentes a direita e esquerda
-		private void rotacao_dir(Nodo x) {
-			Nodo y = x.esq;
-			x.esq = y.dir;
-			if (y.dir != Arvore.nil) y.dir.p = x;
-			y.p = x.p;
-			if (x.p == Arvore.nil) this.raiz = y;
-			else if (x == x.p.esq) x.p.esq = y;
-			else x.p.dir = y;
-			y.dir = x;
-			x.p = y;
-		}
+	private void rotacao_esq(No x) {
+		No y = x.dir;
+		x.dir = y.esq;
+		if (y.esq != Arvore.nil)
+			y.esq.p = x;
+		y.p = x.p;
+		if (x.p == Arvore.nil)
+			this.raiz = y;
+		else if (x == x.p.esq)
+			x.p.esq = y;
+		else
+			x.p.dir = y;
+		y.esq = x;
+		x.p = y;
+	}
 
-		public void adiciona (int n) {
-			// Método que adiciona um novo nodo com valor n (passado como parâmetro)
-		 // na árvore que está rodando
-			if (this.raiz == Arvore.nil) {
-				// Se a árvore ainda estiver vazia, cria o nodo preto e o torna raiz
-				this.raiz = new Nodo (n, false);
+	private void rotacao_dir(No x) {
+		No y = x.esq;
+		x.esq = y.dir;
+		if (y.dir != Arvore.nil)
+			y.dir.p = x;
+		y.p = x.p;
+		if (x.p == Arvore.nil)
+			this.raiz = y;
+		else if (x == x.p.esq)
+			x.p.esq = y;
+		else
+			x.p.dir = y;
+		y.dir = x;
+		x.p = y;
+	}
+
+	public void adiciona(int n) {
+		if (this.raiz == Arvore.nil) {
+			this.raiz = new No(n, false);
+		} else {
+			No a = this.encontra(n);
+			if (n < a.v) {
+				a.esq = new No(n, true);
+				a.esq.p = a;
+				this.fixaadicao(a.esq);
+			} else if (n > a.v) {
+				a.dir = new No(n, true);
+				a.dir.p = a;
+				this.fixaadicao(a.dir);
+			}
+		}
+	}
+
+	// Realiza a troca de n�s
+	public void transplant(No x, No y) {
+		if (x.p == Arvore.nil)
+			this.raiz = y;
+		else if (x == x.p.esq)
+			x.p.esq = y;
+		else
+			x.p.dir = y;
+		y.p = x.p;
+	}
+
+	private void fixaadicao(No z) {
+		No y;
+		while (z.p.cor) {
+			if (z.p == z.p.p.esq) {
+				y = z.p.p.dir;
+				if (y.cor) {
+					z.p.cor = false;
+					y.cor = false;
+					z.p.p.cor = true;
+					z = z.p.p;
+				} else {
+					if (z == z.p.dir) {
+						z = z.p;
+						this.rotacao_esq(z);
+					}
+					z.p.cor = false;
+					z.p.p.cor = true;
+					this.rotacao_dir(z.p.p);
+				}
 			} else {
-				// Se a árvore já conter um ou mais nodos, faremos uma busca (com o método encontra())
-			 // para locaizar o local em que o nodo deverá ser adicionado (isso depende do valor do nodo)
-			// pois os nodos com valores mais altos ficarão à direita da árvore e os com valores mais baixos à esquerda,
-		 // ficando, então, ordenados
-				Nodo a = this.encontra(n);
-				if (n < a.valor) {
-					// Caso o valor do novo nodo seja menor do que o nodo encontrado, será adicionado à esquerda do mesmo
-					a.esq = new Nodo(n, true);
-					a.esq.p = a;
-					this.fixaadicao(a.esq);
-					// Ao final, deve ser chamado o método fixaadicao, que irá corrigir os possíveis casos
-			 	 // de desbalanceamento que podem ocorrer
-				}	else if (n > a.valor) {
-					// Caso o valor do novo nodo seja maior do que o nodo encontrado, será adicionado à direita do mesmo
-					a.dir = new Nodo(n, true);
-					a.dir.p = a;
-					this.fixaadicao(a.dir);
-					// Ao final, deve ser chamado o método fixaadicao, que irá corrigir os possíveis casos
-			 	 // de desbalanceamento que podem ocorrer
-				}
-			}
-		}
-
-		public void transplant (Nodo x, Nodo y) {
-			// Realiza troca entre os nós, sendo necessária ao se remover um nodo para evitar perda de ponteiros
-			if (x.p == Arvore.nil) this.raiz = y;
-			else if (x == x.p.esq) x.p.esq = y;
-			else x.p.dir = y;
-			y.p = x.p;
-		}
-
-		private void fixaadicao(Nodo z) {
-				Nodo y;
-				while (z.p.ver) {
-						if (z.p == z.p.p.esq) {
-								y = z.p.p.dir;
-								if (y.ver) { // caso 1 (tio é vermelho):
-									// muda a cor do pai e do tio para preto e dos avós para vermelho.
-								 // Então, sobe dois níveis na árvore.
-										z.p.ver = false;
-										y.ver = false;
-										z.p.p.ver = true;
-										z = z.p.p;
-								}	else { // Ou seja, tio é preto
-										if (z == z.p.dir) { // caso 2
-												z = z.p;
-												this.rotacao_esq(z);
-										}
-										// caso 3
-										z.p.ver = false;
-										z.p.p.ver = true;
-										this.rotacao_dir(z.p.p);
-								}
-						}	else {
-								y = z.p.p.esq;
-								if (y.ver) { // caso 1
-										y.ver = z.p.ver = false;
-										z.p.p.ver = true;
-										z = z.p.p;
-								}	else {
-										if (z == z.p.esq) { // caso 2
-												z = z.p;
-												this.rotacao_dir(z);
-										}
-										// caso 3
-										z.p.ver = false;
-										z.p.p.ver = true;
-										this.rotacao_esq(z.p.p);
-								}
-						}
-				}
-				this.raiz.ver = false;
-		}
-
-		public void remove(int n) {
-			// Método que irá remover o nodo que conter o valor passado como parâmetro
-				Nodo z = this.encontra(n);
-				// Após utilizar o método encontra(), z será o nodo a ser excluído, caso ele exista, ou o com valor mais próximo de n
-			 // Caso não exista nodo com o valor n, o primeiro if do método já será quebrado e então não fará mais nada
-				Nodo x, y = z;
-				boolean cordey = y.ver;
-
-				if(z.valor == n) {
-					if (z.esq == Arvore.nil) {
-							x = z.dir;
-							this.transplant(z, z.dir);
-					} else if (z.dir == Arvore.nil) {
-							x = z.esq;
-							this.transplant(z, z.esq);
-					}	else {
-							y = z.sucessor();
-							cordey = y.ver;
-							x = y.dir;
-
-							if (y.p == z) x.p = y;
-							else {
-									this.transplant(y, y.dir);
-									y.dir = z.dir;
-									y.dir.p = y;
-							}
-							this.transplant(z, y);
-							y.esq = z.esq;
-							y.esq.p = y;
-							y.ver = z.ver;
+				y = z.p.p.esq;
+				if (y.cor) {
+					y.cor = z.p.cor = false;
+					z.p.p.cor = true;
+					z = z.p.p;
+				} else {
+					if (z == z.p.esq) {
+						z = z.p;
+						this.rotacao_dir(z);
 					}
-
-					if (!cordey) this.fixaremocao(x);
+					z.p.cor = false;
+					z.p.p.cor = true;
+					this.rotacao_esq(z.p.p);
 				}
+			}
 		}
+		this.raiz.cor = false;
+	}
 
-			private void fixaremocao(Nodo n) {
-					Nodo x;
+	public void remove(int n) {
+		No z = this.encontra(n);
+		No x, y = z;
+		boolean cordey = y.cor;
 
-					while (n != this.raiz && !n.ver) {
-							if (n == n.p.esq) {
-									x = n.p.dir;
+		if (z.v == n) {
+			if (z.esq == Arvore.nil) {
+				x = z.dir;
+				this.transplant(z, z.dir);
+			} else if (z.dir == Arvore.nil) {
+				x = z.esq;
+				this.transplant(z, z.esq);
+			} else {
+				y = z.sucessor();
+				cordey = y.cor;
+				x = y.dir;
 
-									if (x.ver) { // caso 1
-											x.ver = false;
-											n.p.ver = true;
-											this.rotacao_esq(n.p);
-											x = n.p.dir;
-									}
-									if (!x.esq.ver && !x.dir.ver) { // caso 2
-											x.ver = true;
-											n = n.p;
-									} else {
-											if (!x.dir.ver) { // caso 3
-													x.esq.ver = false;
-													x.ver = true;
-													this.rotacao_dir(x);
-													x = n.p.dir;
-											}
-											// caso 4
-											x.ver = n.p.ver;
-											n.p.ver = false;
-											x.dir.ver = false;
-											this.rotacao_esq(n.p);
-											n = this.raiz;
-									}
-							}	else {
-									x = n.p.esq;
+				if (y.p == z)
+					x.p = y;
+				else {
+					this.transplant(y, y.dir);
+					y.dir = z.dir;
+					y.dir.p = y;
+				}
+				this.transplant(z, y);
+				y.esq = z.esq;
+				y.esq.p = y;
+				y.cor = z.cor;
+			}
 
-									if (x.ver) { // caso 1
-											x.ver = false;
-											n.p.ver = true;
-											this.rotacao_dir(n.p);
-											x = n.p.esq;
-									}
-									if (!x.esq.ver && !x.dir.ver) { // caso 2
-											x.ver = true;
-											n = n.p;
-									}	else {
-											if (!x.esq.ver) { // caso 3
-													x.dir.ver = false;
-													x.ver = true;
-													this.rotacao_esq(x);
-													x = n.p.esq;
-											}
-											// caso 4
-											x.ver = n.p.ver;
-											n.p.ver = false;
-											x.esq.ver = false;
-											this.rotacao_dir(n.p);
-											n = this.raiz;
-									}
-							}
+			if (!cordey)
+				this.fixaremocao(x);
+		}
+	}
+
+	private void fixaremocao(No n) {
+		No x;
+
+		while (n != this.raiz && !n.cor) {
+			if (n == n.p.esq) {
+				x = n.p.dir;
+
+				if (x.cor) { // caso 1
+					x.cor = false;
+					n.p.cor = true;
+					this.rotacao_esq(n.p);
+					x = n.p.dir;
+				}
+				if (!x.esq.cor && !x.dir.cor) { // caso 2
+					x.cor = true;
+					n = n.p;
+				} else {
+					if (!x.dir.cor) { // caso 3
+						x.esq.cor = false;
+						x.cor = true;
+						this.rotacao_dir(x);
+						x = n.p.dir;
 					}
-					n.ver = false;
+					// caso 4
+					x.cor = n.p.cor;
+					n.p.cor = false;
+					x.dir.cor = false;
+					this.rotacao_esq(n.p);
+					n = this.raiz;
+				}
+			} else {
+				x = n.p.esq;
+
+				if (x.cor) { // caso 1
+					x.cor = false;
+					n.p.cor = true;
+					this.rotacao_dir(n.p);
+					x = n.p.esq;
+				}
+				if (!x.esq.cor && !x.dir.cor) { // caso 2
+					x.cor = true;
+					n = n.p;
+				} else {
+					if (!x.esq.cor) { // caso 3
+						x.dir.cor = false;
+						x.cor = true;
+						this.rotacao_esq(x);
+						x = n.p.esq;
+					}
+					// caso 4
+					x.cor = n.p.cor;
+					n.p.cor = false;
+					x.esq.cor = false;
+					this.rotacao_dir(n.p);
+					n = this.raiz;
+				}
 			}
+		}
+		n.cor = false;
+	}
 
-		public Arvore encontra50(int n) {
-	        Arvore res = new Arvore();
-					cont = 0;
-					
-	        this.raiz.encontra50(cont, n, res);
+	public No encontra(int n) {
+		return this.raiz.encontra(n);
+	}
 
-	        return res;
-	    }
+	public void print() {
+		print(raiz, "Raiz");
+	};
 
-		// Método para printar código do gráfico, para melhor visualização
-			public void grafico() {
-				System.out.println("digraph Arvore {");
-				this.raiz.grafico();
-				System.out.println("\tnil [style = filled, fillcolor = black, fontcolor = white];");
-				System.out.println("}");
-			}
+	void print(No n, String pos) {
+		if (n != null) {
+			String v = (n.v == 0) ? "nil" : n.v + "";
+			System.out.println(v + " - N� " + pos + " [" + color(n.cor) + "] -->");
+			print(n.esq, "Esquerdo");
+			print(n.dir, "Direito");
+		}
+	}
 
-			public void inorderWalk() {
-				this.raiz.imprimirArvore();
-			}
+	String color(boolean flag) {
+		return (flag) ? "RED" : "BLACK";
+	}
 
-			public Nodo minimo() {
-				return this.raiz.minimo();
-			}
-
-			public Nodo maximo() {
-				return this.raiz.maximo();
-			}
-
-			public Nodo encontra (int n) {
-				return this.raiz.encontra(n);
-			}
 }
